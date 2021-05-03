@@ -43,6 +43,9 @@ impl Store for ProjectionView {
 }
 
 impl Push for ProjectionView {
+    fn args_count() -> usize {
+        3
+    }
     fn args_def(kb: &mut KernelBuilder) {
         kb.arg(prm::Float3::zero())
             .arg(prm::Float16::zero())
@@ -64,8 +67,5 @@ impl Push for ProjectionView {
         k.set_arg(i + 2, &(self.fov as f32))?;
 
         Ok(())
-    }
-    fn args_count() -> usize {
-        3
     }
 }
