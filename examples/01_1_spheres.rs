@@ -5,11 +5,11 @@ use clay::{
     scene::{GradientBackground as GradBg, ListScene},
     shape::*,
     view::ProjectionView,
-    Context,
 };
+use clay_utils::args;
 use clay_viewer::Window;
 use nalgebra::{Rotation3, Vector3};
-use ocl::{Device, Platform};
+use std::env;
 use std::time::Duration;
 
 // Here we declare our object - a combination of
@@ -21,10 +21,8 @@ type MyScene = ListScene<MyObject, GradBg>;
 type MyView = ProjectionView;
 
 fn main() -> clay::Result<()> {
-    // Select default OpenCL platform and device
-    let platform = Platform::default();
-    let device = Device::first(platform)?;
-    let context = Context::new(platform, device)?;
+    // Parse args to select OpenCL platform
+    let context = args::parse(env::args())?;
 
     // Dimensions of the window
     let dims = (1280, 800);
@@ -64,7 +62,7 @@ fn main() -> clay::Result<()> {
     // Create viewer window
     let mut window = Window::new(dims)?;
 
-    // Repeatedly trace rays and collect statictics
+    // Repeatedly trace rays and collect statistics
     // that subsequently reduces image noise
     while !window.poll()? {
         // Render scene

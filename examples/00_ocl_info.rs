@@ -10,7 +10,7 @@ fn print_info() -> ocl::Result<()> {
         for d in Device::list_all(&p)? {
             println!("    {}", d.name()?);
         }
-        println!("");
+        println!();
     }
     Ok(())
 }

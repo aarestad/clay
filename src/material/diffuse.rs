@@ -4,7 +4,7 @@ use std::collections::HashSet;
 /// Diffuse material.
 ///
 /// The light scatters in any direction in the half-space
-/// proportional to the cosine of an angle betwen the normal of the surface.
+/// proportional to the cosine of an angle between the normal of the surface.
 #[derive(Clone, Debug, Default)]
 pub struct Diffuse {}
 

@@ -102,7 +102,7 @@ fn main() -> clay::Result<()> {
     let mut motion = Motion::new(renderer.view.pos, renderer.view.ori.clone());
 
     // Structure for frame rate measurement (optional)
-    let mut fcnt = FrameCounter::new_with_log(Duration::from_secs(2));
+    let mut frame_counter = FrameCounter::new_with_log(Duration::from_secs(2));
 
     // Main loop - repeatedly update view and render
     while !window.poll_with_handler(&mut motion)? {
@@ -119,7 +119,7 @@ fn main() -> clay::Result<()> {
         // Measure frame duration
         let dt = window.step_frame();
 
-        // Check motion occured
+        // Check motion occurred
         if motion.was_updated() {
             // Clear cumulative buffer
             worker.data_mut().buffer_mut().clear()?;
@@ -134,7 +134,7 @@ fn main() -> clay::Result<()> {
         }
 
         // Count and print frame rate
-        fcnt.step_frame(dt, n);
+        frame_counter.step_frame(dt, n);
     }
 
     Ok(())
