@@ -1,9 +1,5 @@
+use crate::{prelude::*, shape::*};
 use std::collections::HashSet;
-use crate::{
-    prelude::*,
-    shape::*,
-};
-
 
 /// Unit cube - centered at the origin and of edge length two.
 ///
@@ -31,7 +27,11 @@ impl Instance<ShapeClass> for UnitCube {
 }
 
 impl Pack for UnitCube {
-    fn size_int() -> usize { 0 }
-    fn size_float() -> usize { 0 }
+    fn size_int() -> usize {
+        0
+    }
+    fn size_float() -> usize {
+        0
+    }
     fn pack_to(&self, _buffer_int: &mut [i32], _buffer_float: &mut [f32]) {}
 }

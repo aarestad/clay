@@ -1,11 +1,6 @@
+use crate::{map::*, prelude::*, shape::*};
+use nalgebra::Vector3;
 use std::collections::HashSet;
-use nalgebra::{Vector3};
-use crate::{
-    prelude::*,
-    map::*,
-    shape::*,
-};
-
 
 type SphereBase = ShapeMapper<UnitSphere, Chain<Scale, Shift>>;
 /// Shape obtained by scaling and shifting the unit sphere.
@@ -25,13 +20,21 @@ impl From<SphereBase> for Sphere {
 impl Shape for Sphere {}
 
 impl Instance<ShapeClass> for Sphere {
-    fn source(cache: &mut HashSet<u64>) -> String { SphereBase::source(cache) }
-    fn inst_name() -> String { SphereBase::inst_name() }
+    fn source(cache: &mut HashSet<u64>) -> String {
+        SphereBase::source(cache)
+    }
+    fn inst_name() -> String {
+        SphereBase::inst_name()
+    }
 }
 
 impl Pack for Sphere {
-    fn size_int() -> usize { SphereBase::size_int() }
-    fn size_float() -> usize { SphereBase::size_float() }
+    fn size_int() -> usize {
+        SphereBase::size_int()
+    }
+    fn size_float() -> usize {
+        SphereBase::size_float()
+    }
     fn pack_to(&self, buffer_int: &mut [i32], buffer_float: &mut [f32]) {
         self.0.pack_to(buffer_int, buffer_float);
     }
@@ -39,12 +42,20 @@ impl Pack for Sphere {
 
 impl Bound for Sphere {}
 impl Instance<BoundClass> for Sphere {
-    fn source(cache: &mut HashSet<u64>) -> String { UnitSphere::source(cache) }
-    fn inst_name() -> String { "sphere".to_string() }
+    fn source(cache: &mut HashSet<u64>) -> String {
+        UnitSphere::source(cache)
+    }
+    fn inst_name() -> String {
+        "sphere".to_string()
+    }
 }
 
 impl Target for Sphere {}
 impl Instance<TargetClass> for Sphere {
-    fn source(cache: &mut HashSet<u64>) -> String { UnitSphere::source(cache) }
-    fn inst_name() -> String { "sphere_target".to_string() }
+    fn source(cache: &mut HashSet<u64>) -> String {
+        UnitSphere::source(cache)
+    }
+    fn inst_name() -> String {
+        "sphere_target".to_string()
+    }
 }

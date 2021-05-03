@@ -1,7 +1,6 @@
-use std::collections::HashSet;
+use crate::{filter::Filter, Push};
 use ocl::{self, builders::KernelBuilder};
-use crate::{Push, filter::Filter};
-
+use std::collections::HashSet;
 
 /// Glare blur.
 ///
@@ -34,6 +33,6 @@ impl Push for GlareFilter {
     }
     fn args_set(&mut self, i: usize, k: &mut ocl::Kernel) -> crate::Result<()> {
         k.set_arg(i + 0, &(self.strength as f32))
-        .map_err(|e| e.into())
+            .map_err(|e| e.into())
     }
 }

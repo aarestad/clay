@@ -1,11 +1,6 @@
+use crate::{map::*, prelude::*, shape::*};
+use nalgebra::{Matrix3, Vector3};
 use std::collections::HashSet;
-use nalgebra::{Vector3, Matrix3};
-use crate::{
-    prelude::*,
-    map::*,
-    shape::*,
-};
-
 
 type ParallelepipedBase = ShapeMapper<UnitCube, Affine>;
 /// Parallelepiped shape defined by affine transform on unit cube.
@@ -32,8 +27,12 @@ impl Instance<ShapeClass> for Parallelepiped {
     }
 }
 impl Pack for Parallelepiped {
-    fn size_int() -> usize { ParallelepipedBase::size_int() }
-    fn size_float() -> usize { ParallelepipedBase::size_float() }
+    fn size_int() -> usize {
+        ParallelepipedBase::size_int()
+    }
+    fn size_float() -> usize {
+        ParallelepipedBase::size_float()
+    }
     fn pack_to(&self, buffer_int: &mut [i32], buffer_float: &mut [f32]) {
         self.0.pack_to(buffer_int, buffer_float);
     }
@@ -48,9 +47,9 @@ impl Bounded<Sphere> for Parallelepiped {
         for i in 0..8 {
             let mut data = [0.0; 3];
             for j in 0..3 {
-                data[j] = 1.0 - 2.0*(((i << j) & 1) as f64);
+                data[j] = 1.0 - 2.0 * (((i << j) & 1) as f64);
             }
-            let len = (basis*Vector3::from_column_slice(&data)).norm();
+            let len = (basis * Vector3::from_column_slice(&data)).norm();
             if len > rad {
                 rad = len;
             }

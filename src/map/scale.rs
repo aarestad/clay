@@ -1,6 +1,5 @@
+use crate::{map::*, prelude::*};
 use std::collections::HashSet;
-use crate::{prelude::*, map::*};
-
 
 /// Isotropic scaling.
 pub struct Scale(pub f64);

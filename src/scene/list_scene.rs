@@ -1,17 +1,13 @@
-use std::collections::HashSet;
-use ocl::{
-    self,
-    builders::KernelBuilder,
-};
-use uuid::Uuid;
 use crate::{
-    prelude::*,
-    object::*,
-    scene::{Scene, Background},
-    Context,
     buffer::InstanceBuffer,
+    object::*,
+    prelude::*,
+    scene::{Background, Scene},
+    Context,
 };
-
+use ocl::{self, builders::KernelBuilder};
+use std::collections::HashSet;
+use uuid::Uuid;
 
 /// Scene with linear complexity of object search.
 pub struct ListScene<O: Object, B: Background> {
@@ -23,7 +19,12 @@ pub struct ListScene<O: Object, B: Background> {
 
 impl<O: Object, B: Background> ListScene<O, B> {
     pub fn new(background: B) -> Self {
-        Self { objects: Vec::new(), background, uuid: Uuid::new_v4(), max_depth: 4 }
+        Self {
+            objects: Vec::new(),
+            background,
+            uuid: Uuid::new_v4(),
+            max_depth: 4,
+        }
     }
 
     pub fn add(&mut self, object: O) {
@@ -51,12 +52,11 @@ impl<O: Object, B: Background> Scene for ListScene<O, B> {
         [
             O::source(cache),
             B::source(cache),
-            ObjectClass::methods().into_iter().map(|method| {
-                format!(
-                    "#define __object_{} {}_{}",
-                    method, O::inst_name(), method,
-                )
-            }).collect::<Vec<_>>().join("\n"),
+            ObjectClass::methods()
+                .into_iter()
+                .map(|method| format!("#define __object_{} {}_{}", method, O::inst_name(), method,))
+                .collect::<Vec<_>>()
+                .join("\n"),
             format!("#define OBJECT_SIZE_INT {}", O::size_int()),
             format!("#define OBJECT_SIZE_FLOAT {}", O::size_float()),
             "#include <clay/scene/list_scene.h>".to_string(),
@@ -78,7 +78,8 @@ impl<O: Object, B: Background> Store for ListScene<O, B> {
         Ok(ListSceneData {
             buffer: InstanceBuffer::new(context, self.objects.iter())?,
             background: self.background.create_data(context)?,
-            uuid: self.uuid, max_depth: self.max_depth,
+            uuid: self.uuid,
+            max_depth: self.max_depth,
         })
     }
     fn update_data(&self, context: &Context, data: &mut Self::Data) -> clay_core::Result<()> {
@@ -107,8 +108,6 @@ impl<O: Object, B: Background> Push for ListSceneData<O, B> {
         self.background.args_set(j, k)
     }
     fn args_count() -> usize {
-        InstanceBuffer::<O>::args_count() +
-        1 +
-        B::Data::args_count()
+        InstanceBuffer::<O>::args_count() + 1 + B::Data::args_count()
     }
 }

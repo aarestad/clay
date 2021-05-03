@@ -1,8 +1,7 @@
+use crate::{prelude::*, view::View, Context};
+use nalgebra::{Rotation3, Vector3};
+use ocl::{self, builders::KernelBuilder, prm};
 use std::collections::HashSet;
-use ocl::{self, prm, builders::KernelBuilder};
-use nalgebra::{Vector3, Rotation3};
-use crate::{prelude::*, Context, view::View};
-
 
 /// Perspective projection view.
 #[derive(Debug, Clone)]
@@ -23,13 +22,13 @@ impl ProjectionView {
     pub fn update(&mut self, pos: Vector3<f64>, ori: Rotation3<f64>) {
         self.pos = pos;
         self.ori = ori;
-    } 
+    }
 }
 
 impl View for ProjectionView {
-	fn source(_: &mut HashSet<u64>) -> String {
-		"#include <clay/view/proj_view.h>\n".to_string()
-	}
+    fn source(_: &mut HashSet<u64>) -> String {
+        "#include <clay/view/proj_view.h>\n".to_string()
+    }
 }
 
 impl Store for ProjectionView {
@@ -45,10 +44,9 @@ impl Store for ProjectionView {
 
 impl Push for ProjectionView {
     fn args_def(kb: &mut KernelBuilder) {
-        kb
-        .arg(prm::Float3::zero())
-        .arg(prm::Float16::zero())
-        .arg(0.0f32);
+        kb.arg(prm::Float3::zero())
+            .arg(prm::Float16::zero())
+            .arg(0.0f32);
     }
     fn args_set(&mut self, i: usize, k: &mut ocl::Kernel) -> crate::Result<()> {
         let mapf = self.ori.matrix().map(|x| x as f32);

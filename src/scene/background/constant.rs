@@ -1,8 +1,7 @@
+use crate::{prelude::*, scene::Background, Context};
+use nalgebra::Vector3;
+use ocl::{self, builders::KernelBuilder, prm};
 use std::collections::HashSet;
-use nalgebra::{Vector3};
-use ocl::{self, prm, builders::KernelBuilder};
-use crate::{prelude::*, Context, scene::Background};
-
 
 /// Background of constant color.
 #[derive(Debug, Clone)]

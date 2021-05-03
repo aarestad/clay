@@ -1,8 +1,5 @@
+pub use crate::core::process::{RenderData, RenderWorker, Renderer, RendererBuilder};
 use crate::{scene::Scene, view::View};
-pub use crate::core::process::{
-    RendererBuilder, Renderer,
-    RenderWorker, RenderData,
-};
 
 /// Creates renderer with already included device source from `clay` and `clay-core`.
 pub fn create_renderer<S: Scene, V: View>() -> RendererBuilder<S, V> {

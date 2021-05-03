@@ -1,6 +1,5 @@
 pub use crate::core::map::*;
 
-
 mod shift;
 pub use shift::*;
 mod scale;

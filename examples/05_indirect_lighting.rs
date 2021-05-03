@@ -1,19 +1,19 @@
-use std::{env, time::Duration};
-use nalgebra::{Vector3, Rotation3, Matrix3};
 use clay::{
-    prelude::*,
-    shape::*,
-    material::*,
-    object::*,
-    scene::{TargetListScene, GradientBackground as GradBg},
-    view::ProjectionView,
     filter::*,
-    process::{create_renderer, create_postproc},
-    shape_select, material_select, material_combine,
+    material::*,
+    material_combine, material_select,
+    object::*,
+    prelude::*,
+    process::{create_postproc, create_renderer},
+    scene::{GradientBackground as GradBg, TargetListScene},
+    shape::*,
+    shape_select,
+    view::ProjectionView,
 };
-use clay_viewer::{Window, Motion};
 use clay_utils::{args, FrameCounter};
-
+use clay_viewer::{Motion, Window};
+use nalgebra::{Matrix3, Rotation3, Vector3};
+use std::{env, time::Duration};
 
 shape_select!(MyShape {
     P(TP=Parallelepiped),
@@ -38,7 +38,6 @@ type MyObject = Covered<MyShape, MyMaterial>;
 type MyScene = TargetListScene<MyObject, Sphere, GradBg>;
 type MyView = ProjectionView;
 
-
 fn main() -> clay::Result<()> {
     // Parse args to select OpenCL platform
     let context = args::parse(env::args())?;
@@ -48,7 +47,8 @@ fn main() -> clay::Result<()> {
 
     // Initialize the scene
     let mut scene = TargetListScene::new(GradBg::new(
-        10.0*Vector3::new(0.1, 0.1, 1.0), 10.0*Vector3::new(0.5, 0.5, 1.0),
+        10.0 * Vector3::new(0.1, 0.1, 1.0),
+        10.0 * Vector3::new(0.5, 0.5, 1.0),
         Vector3::new(0.0, 0.0, 1.0),
     ));
     scene.set_max_depth(8);
@@ -59,42 +59,54 @@ fn main() -> clay::Result<()> {
     let (wpos, wsize) = (0.5, (1.6, 1.0)); // window parameters
     let thc = 0.05; // thickness
     let mut parts = Vec::new();
-    
+
     // ceil
-    parts.push((Parallelepiped::new(
-        Matrix3::from_diagonal(&Vector3::new(size.0 + 2.0*thc, size.1 + 2.0*thc, thc)),
-        Vector3::new(0.0, 0.0, 2.0*size.2 + thc),
-    ), Vector3::new(0.9, 0.9, 0.9)));
+    parts.push((
+        Parallelepiped::new(
+            Matrix3::from_diagonal(&Vector3::new(size.0 + 2.0 * thc, size.1 + 2.0 * thc, thc)),
+            Vector3::new(0.0, 0.0, 2.0 * size.2 + thc),
+        ),
+        Vector3::new(0.9, 0.9, 0.9),
+    ));
     // walls
-    parts.push((Parallelepiped::new(
-        Matrix3::from_diagonal(&Vector3::new(thc, size.1, size.2)),
-        Vector3::new(-(size.0 + thc), 0.0, size.2),
-    ), Vector3::new(0.4, 0.4, 1.0)));
-    parts.push((Parallelepiped::new(
-        Matrix3::from_diagonal(&Vector3::new(size.0 + 2.0*thc, thc, size.2)),
-        Vector3::new(0.0, -(size.1 + thc), size.2),
-    ), Vector3::new(0.4, 1.0, 0.4)));
-    parts.push((Parallelepiped::new(
-        Matrix3::from_diagonal(&Vector3::new(size.0 + 2.0*thc, thc, size.2)),
-        Vector3::new(0.0, size.1 + thc, size.2),
-    ), Vector3::new(1.0, 1.0, 0.4)));
+    parts.push((
+        Parallelepiped::new(
+            Matrix3::from_diagonal(&Vector3::new(thc, size.1, size.2)),
+            Vector3::new(-(size.0 + thc), 0.0, size.2),
+        ),
+        Vector3::new(0.4, 0.4, 1.0),
+    ));
+    parts.push((
+        Parallelepiped::new(
+            Matrix3::from_diagonal(&Vector3::new(size.0 + 2.0 * thc, thc, size.2)),
+            Vector3::new(0.0, -(size.1 + thc), size.2),
+        ),
+        Vector3::new(0.4, 1.0, 0.4),
+    ));
+    parts.push((
+        Parallelepiped::new(
+            Matrix3::from_diagonal(&Vector3::new(size.0 + 2.0 * thc, thc, size.2)),
+            Vector3::new(0.0, size.1 + thc, size.2),
+        ),
+        Vector3::new(1.0, 1.0, 0.4),
+    ));
     // last wall with window
     let mut wparts = Vec::new();
     wparts.push(Parallelepiped::new(
-        Matrix3::from_diagonal(&Vector3::new(thc, size.1, 0.5*wpos)),
-        Vector3::new(size.0 + thc, 0.0, 0.5*wpos),
+        Matrix3::from_diagonal(&Vector3::new(thc, size.1, 0.5 * wpos)),
+        Vector3::new(size.0 + thc, 0.0, 0.5 * wpos),
     ));
     wparts.push(Parallelepiped::new(
-        Matrix3::from_diagonal(&Vector3::new(thc, size.1, size.2 - wsize.1 - 0.5*wpos)),
-        Vector3::new(size.0 + thc, 0.0, size.2 + wsize.1 + 0.5*wpos),
+        Matrix3::from_diagonal(&Vector3::new(thc, size.1, size.2 - wsize.1 - 0.5 * wpos)),
+        Vector3::new(size.0 + thc, 0.0, size.2 + wsize.1 + 0.5 * wpos),
     ));
     wparts.push(Parallelepiped::new(
-        Matrix3::from_diagonal(&Vector3::new(thc, 0.5*(size.1 - wsize.0), wsize.1)),
-        Vector3::new(size.0 + thc, 0.5*(size.1 + wsize.0), wpos + wsize.1),
+        Matrix3::from_diagonal(&Vector3::new(thc, 0.5 * (size.1 - wsize.0), wsize.1)),
+        Vector3::new(size.0 + thc, 0.5 * (size.1 + wsize.0), wpos + wsize.1),
     ));
     wparts.push(Parallelepiped::new(
-        Matrix3::from_diagonal(&Vector3::new(thc, 0.5*(size.1 - wsize.0), wsize.1)),
-        Vector3::new(size.0 + thc, -0.5*(size.1 + wsize.0), wpos + wsize.1),
+        Matrix3::from_diagonal(&Vector3::new(thc, 0.5 * (size.1 - wsize.0), wsize.1)),
+        Vector3::new(size.0 + thc, -0.5 * (size.1 + wsize.0), wpos + wsize.1),
     ));
     // window cross
     wparts.push(Parallelepiped::new(
@@ -113,38 +125,55 @@ fn main() -> clay::Result<()> {
     }
 
     // floor
-    scene.add(MyShape::from(Parallelepiped::new(
-        Matrix3::from_diagonal(&Vector3::new(size.0 + 2.0*thc, size.1 + 2.0*thc, thc)),
-        Vector3::new(0.0, 0.0, -thc),
-    )).cover(MyMaterial::from(Glossy::new(
-        (0.1, Reflective {}),
-        (0.9, Diffuse {}.color_with(Vector3::new(0.9, 0.9, 0.9))),
-    ))));
+    scene.add(
+        MyShape::from(Parallelepiped::new(
+            Matrix3::from_diagonal(&Vector3::new(size.0 + 2.0 * thc, size.1 + 2.0 * thc, thc)),
+            Vector3::new(0.0, 0.0, -thc),
+        ))
+        .cover(MyMaterial::from(Glossy::new(
+            (0.1, Reflective {}),
+            (0.9, Diffuse {}.color_with(Vector3::new(0.9, 0.9, 0.9))),
+        ))),
+    );
 
     let gap = 0.05;
     // Bed
-    scene.add(MyShape::from(Parallelepiped::new(
-        Matrix3::from_diagonal(&Vector3::new(0.8, 1.2, 0.3)),
-        Vector3::new(-(size.0 - 0.8 - gap), size.1 - 1.2 - gap, 0.3 + gap),
-    )).cover(MyMaterial::from(Diffuse {}.color_with(Vector3::new(0.9, 0.9, 0.9)))));
+    scene.add(
+        MyShape::from(Parallelepiped::new(
+            Matrix3::from_diagonal(&Vector3::new(0.8, 1.2, 0.3)),
+            Vector3::new(-(size.0 - 0.8 - gap), size.1 - 1.2 - gap, 0.3 + gap),
+        ))
+        .cover(MyMaterial::from(
+            Diffuse {}.color_with(Vector3::new(0.9, 0.9, 0.9)),
+        )),
+    );
     // Shelf
-    scene.add(MyShape::from(Parallelepiped::new(
-        Matrix3::from_diagonal(&Vector3::new(0.8, 0.2, 1.0)),
-        Vector3::new(-(size.0 - 0.8 - gap), -(size.1 - 0.2 - gap), 1.0),
-    )).cover(MyMaterial::from(Glossy::new(
-        (0.1, Reflective {}),
-        (0.9, Diffuse {}.color_with(Vector3::new(1.0, 1.0, 1.0))),
-    ))));
+    scene.add(
+        MyShape::from(Parallelepiped::new(
+            Matrix3::from_diagonal(&Vector3::new(0.8, 0.2, 1.0)),
+            Vector3::new(-(size.0 - 0.8 - gap), -(size.1 - 0.2 - gap), 1.0),
+        ))
+        .cover(MyMaterial::from(Glossy::new(
+            (0.1, Reflective {}),
+            (0.9, Diffuse {}.color_with(Vector3::new(1.0, 1.0, 1.0))),
+        ))),
+    );
     // Mirror
-    scene.add(MyShape::from(Parallelepiped::new(
-        Matrix3::from_diagonal(&Vector3::new(1.0, 0.01, 0.8)),
-        Vector3::new(0.0, size.1 - 0.01, 1.3),
-    )).cover(MyMaterial::from(Reflective {})));
+    scene.add(
+        MyShape::from(Parallelepiped::new(
+            Matrix3::from_diagonal(&Vector3::new(1.0, 0.01, 0.8)),
+            Vector3::new(0.0, size.1 - 0.01, 1.3),
+        ))
+        .cover(MyMaterial::from(Reflective {})),
+    );
     // Ball
-    scene.add(MyShape::from(Ellipsoid::new(
-        0.4*Matrix3::identity(),
-        Vector3::new(-(size.0 - 0.4 - gap), -0.2*(size.1 - 0.4), 0.4),
-    )).cover(MyMaterial::from(Reflective {})));
+    scene.add(
+        MyShape::from(Ellipsoid::new(
+            0.4 * Matrix3::identity(),
+            Vector3::new(-(size.0 - 0.4 - gap), -0.2 * (size.1 - 0.4), 0.4),
+        ))
+        .cover(MyMaterial::from(Reflective {})),
+    );
     // Table
     let tsize = (0.6, 0.6, 0.4);
     let tpos = (0.0, size.1 - tsize.1 - gap);
@@ -155,10 +184,14 @@ fn main() -> clay::Result<()> {
         Vector3::new(tpos.0, tpos.1, tsize.2 - tw),
     ));
     for i in 0..4 {
-        let s = (2.0*((i/2) as f64 - 0.5), 2.0*((i%2) as f64 - 0.5));
+        let s = (2.0 * ((i / 2) as f64 - 0.5), 2.0 * ((i % 2) as f64 - 0.5));
         tparts.push(Parallelepiped::new(
-            Matrix3::from_diagonal(&Vector3::new(tw, tw, 0.5*(tsize.2 - 2.0*tw))),
-            Vector3::new(tpos.0 + s.0*(tsize.0 - tw), tpos.1 + s.1*(tsize.1 - tw), 0.5*(tsize.2 - 2.0*tw)),
+            Matrix3::from_diagonal(&Vector3::new(tw, tw, 0.5 * (tsize.2 - 2.0 * tw))),
+            Vector3::new(
+                tpos.0 + s.0 * (tsize.0 - tw),
+                tpos.1 + s.1 * (tsize.1 - tw),
+                0.5 * (tsize.2 - 2.0 * tw),
+            ),
         ));
     }
     for tp in tparts {
@@ -169,22 +202,33 @@ fn main() -> clay::Result<()> {
     }
 
     // Add ground
-    scene.add(MyShape::from(Parallelepiped::new(
-        Matrix3::from_diagonal(&Vector3::new(100.0, 100.0, 0.5)),
-        Vector3::new(0.0, 0.0, -0.5 - 2.0*thc),
-    )).cover(MyMaterial::from(Diffuse {}.color_with(Vector3::new(0.5, 1.0, 0.3)))));
+    scene.add(
+        MyShape::from(Parallelepiped::new(
+            Matrix3::from_diagonal(&Vector3::new(100.0, 100.0, 0.5)),
+            Vector3::new(0.0, 0.0, -0.5 - 2.0 * thc),
+        ))
+        .cover(MyMaterial::from(
+            Diffuse {}.color_with(Vector3::new(0.5, 1.0, 0.3)),
+        )),
+    );
 
     // Add light source
     let dist = 1e4;
-    let lrad = 2e-2*dist;
-    scene.add_targeted(MyShape::from(Ellipsoid::new(
-        lrad*Matrix3::identity(), dist*Vector3::new(1.0,-0.1, 0.2),
-    )).cover(MyMaterial::from(Luminous {}.color_with(4e4*Vector3::new(1.0, 1.0, 0.6)))));
-    
+    let lrad = 2e-2 * dist;
+    scene.add_targeted(
+        MyShape::from(Ellipsoid::new(
+            lrad * Matrix3::identity(),
+            dist * Vector3::new(1.0, -0.1, 0.2),
+        ))
+        .cover(MyMaterial::from(
+            Luminous {}.color_with(4e4 * Vector3::new(1.0, 1.0, 0.6)),
+        )),
+    );
+
     // Create view
     let view = ProjectionView::new(
-        Vector3::new(1.5,-2.0, 1.0),
-        Rotation3::face_towards(&-Vector3::new(-0.85, 1.0,-0.1), &Vector3::z_axis()),
+        Vector3::new(1.5, -2.0, 1.0),
+        Rotation3::face_towards(&-Vector3::new(-0.85, 1.0, -0.1), &Vector3::z_axis()),
     );
 
     // Create renderer and worker
@@ -192,8 +236,10 @@ fn main() -> clay::Result<()> {
     let (mut worker, _) = renderer.create_worker(&context)?;
 
     // Create dummy postprocessor
-    let (mut postproc, _) = create_postproc().collect()?
-    .build(&context, dims, LogFilter::new(-1.0, 1.5))?;
+    let (mut postproc, _) =
+        create_postproc()
+            .collect()?
+            .build(&context, dims, LogFilter::new(-1.0, 1.5))?;
 
     // Create viewer window
     let mut window = Window::new(dims)?;
@@ -228,7 +274,7 @@ fn main() -> clay::Result<()> {
 
             // Move to a new location
             motion.step(dt);
-            
+
             // Update view location
             renderer.view.update(motion.pos(), motion.ori());
             renderer.view.fov = motion.fov;

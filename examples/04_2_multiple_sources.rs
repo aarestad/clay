@@ -1,23 +1,24 @@
+use clay::{
+    filter::IdentityFilter,
+    material::*,
+    material_combine, material_select,
+    object::*,
+    prelude::*,
+    process::{create_postproc, create_renderer},
+    scene::{GradientBackground as GradBg, TargetListScene},
+    shape::*,
+    shape_select,
+    view::ProjectionView,
+};
+use clay_utils::{args, FrameCounter};
+use clay_viewer::{Motion, Window};
+use nalgebra::{Matrix3, Rotation3, Vector3};
 use std::{
     env,
+    fs::{create_dir_all, File},
     io::Write,
-    fs::{File, create_dir_all},
     time::Duration,
 };
-use nalgebra::{Vector3, Matrix3, Rotation3};
-use clay::{
-    prelude::*,
-    shape::*,
-    material::*,
-    object::*,
-    scene::{TargetListScene, GradientBackground as GradBg},
-    view::ProjectionView,
-    filter::{IdentityFilter},
-    process::{create_renderer, create_postproc},
-    shape_select, material_select, material_combine,
-};
-use clay_viewer::{Window, Motion};
-use clay_utils::{args, FrameCounter};
 
 shape_select!(MyShape {
     Cube(TC=Parallelepiped),
@@ -36,33 +37,33 @@ type MyObject = Covered<MyShape, MyMaterial>;
 type MyScene = TargetListScene<MyObject, Sphere, GradBg>;
 type MyView = ProjectionView;
 
-
 fn main() -> clay::Result<()> {
     // Parse args to select OpenCL platform
     let context = args::parse(env::args())?;
     let dims = (1280, 800);
 
     let mut scene = TargetListScene::new(GradBg::new(
-        Vector3::new(0.2, 0.2, 0.4), Vector3::zeros(),
+        Vector3::new(0.2, 0.2, 0.4),
+        Vector3::zeros(),
         Vector3::new(0.0, 0.0, 1.0),
     ));
     scene.add_targeted(
         MyShape::from(Parallelepiped::new(
-            0.25*Matrix3::identity(),
+            0.25 * Matrix3::identity(),
             Vector3::new(-2.0, 0.0, 5.0),
         ))
         .cover(MyMaterial::from(
-            Luminous {}.color_with(100.0*Vector3::new(1.0, 1.0, 0.5)),
-        ))
+            Luminous {}.color_with(100.0 * Vector3::new(1.0, 1.0, 0.5)),
+        )),
     );
     scene.add_targeted(
         MyShape::from(Ellipsoid::new(
-            0.2*Matrix3::identity(),
+            0.2 * Matrix3::identity(),
             Vector3::new(0.0, -2.0, 2.5),
         ))
         .cover(MyMaterial::from(
-            Luminous {}.color_with(100.0*Vector3::new(0.2, 0.2, 1.0)),
-        ))
+            Luminous {}.color_with(100.0 * Vector3::new(0.2, 0.2, 1.0)),
+        )),
     );
     scene.add(
         MyShape::from(Parallelepiped::new(
@@ -71,41 +72,41 @@ fn main() -> clay::Result<()> {
         ))
         .cover(MyMaterial::from(
             Diffuse {}.color_with(Vector3::new(0.9, 0.9, 0.9)),
-        ))
+        )),
     );
     scene.add(
         MyShape::from(Parallelepiped::new(
-            0.3*Matrix3::identity(),
+            0.3 * Matrix3::identity(),
             Vector3::new(1.0, 0.0, 0.3),
         ))
         .cover(MyMaterial::from(Glossy::new(
             (0.2, Reflective {}),
             (0.8, Diffuse {}.color_with(Vector3::new(0.5, 0.5, 0.9))),
-        )))
+        ))),
     );
     scene.add(
         MyShape::from(Ellipsoid::new(
-            0.5*Matrix3::identity(),
+            0.5 * Matrix3::identity(),
             Vector3::new(0.0, 0.0, 0.5),
         ))
         .cover(MyMaterial::from(Glossy::new(
             (0.1, Reflective {}),
             (0.9, Diffuse {}.color_with(Vector3::new(0.9, 0.5, 0.5))),
-        )))
+        ))),
     );
     scene.add(
         MyShape::from(Ellipsoid::new(
-            0.4*Matrix3::identity(),
+            0.4 * Matrix3::identity(),
             Vector3::new(0.5, 1.0, 0.4),
         ))
         .cover(MyMaterial::from(
             Diffuse {}.color_with(Vector3::new(0.5, 0.9, 0.5)),
-        ))
+        )),
     );
 
     let view = ProjectionView::new(
         Vector3::new(0.5, -2.0, 2.0),
-        Rotation3::face_towards(&-Vector3::new(0.0, 1.0,-0.75), &Vector3::z_axis()),
+        Rotation3::face_towards(&-Vector3::new(0.0, 1.0, -0.75), &Vector3::z_axis()),
     );
 
     let mut renderer = create_renderer::<MyScene, MyView>().build(dims, scene, view)?;
@@ -115,9 +116,10 @@ fn main() -> clay::Result<()> {
     for (name, prog) in [
         ("render.c", &renderer.program()),
         ("filter.c", &postproc_builder.program()),
-    ].iter() {
-        File::create(&format!("__gen_programs/{}", name))?
-        .write_all(prog.source().as_bytes())?;
+    ]
+    .iter()
+    {
+        File::create(&format!("__gen_programs/{}", name))?.write_all(prog.source().as_bytes())?;
     }
 
     let (mut worker, message) = renderer.create_worker(&context)?;
@@ -160,7 +162,7 @@ fn main() -> clay::Result<()> {
 
             // Move to a new location
             motion.step(dt);
-            
+
             // Update view location
             renderer.view.update(motion.pos(), motion.ori());
             renderer.view.fov = motion.fov;

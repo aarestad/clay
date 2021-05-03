@@ -1,6 +1,5 @@
+use crate::{material::*, prelude::*};
 use std::collections::HashSet;
-use crate::{prelude::*, material::*};
-
 
 /// Diffuse material.
 ///
@@ -25,7 +24,11 @@ impl Instance<MaterialClass> for Diffuse {
 }
 
 impl Pack for Diffuse {
-    fn size_int() -> usize { 0 }
-    fn size_float() -> usize { 0 }
+    fn size_int() -> usize {
+        0
+    }
+    fn size_float() -> usize {
+        0
+    }
     fn pack_to(&self, _buffer_int: &mut [i32], _buffer_float: &mut [f32]) {}
 }

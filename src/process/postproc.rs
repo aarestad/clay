@@ -1,9 +1,5 @@
-use crate::{
-    filter::{Filter, IdentityFilter},
-};
-pub use crate::core::process::{
-    PostprocBuilder, PostprocCollector, Postproc,
-};
+pub use crate::core::process::{Postproc, PostprocBuilder, PostprocCollector};
+use crate::filter::{Filter, IdentityFilter};
 
 /// Creates postrocessor with already included device source from `clay` and `clay-core`.
 pub fn create_postproc<F: Filter>() -> PostprocCollector<F> {

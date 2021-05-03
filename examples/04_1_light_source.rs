@@ -1,18 +1,18 @@
-use std::{env, time::Duration};
-use nalgebra::{Vector3, Rotation3, Matrix3};
 use clay::{
-    prelude::*,
-    shape::*,
     material::*,
+    material_select,
     object::*,
-    scene::{TargetListScene, GradientBackground as GradBg},
+    prelude::*,
+    process::{create_default_postproc, create_renderer},
+    scene::{GradientBackground as GradBg, TargetListScene},
+    shape::*,
+    shape_select,
     view::ProjectionView,
-    process::{create_renderer, create_default_postproc},
-    shape_select, material_select,
 };
-use clay_viewer::{Window, Motion};
 use clay_utils::{args, FrameCounter};
-
+use clay_viewer::{Motion, Window};
+use nalgebra::{Matrix3, Rotation3, Vector3};
+use std::{env, time::Duration};
 
 shape_select!(MyShape {
     P(TP=Parallelepiped),
@@ -31,7 +31,6 @@ type MyObject = Covered<MyShape, MyMaterial>;
 type MyScene = TargetListScene<MyObject, Sphere, GradBg>;
 type MyView = ProjectionView;
 
-
 fn main() -> clay::Result<()> {
     // Parse args to select OpenCL platform
     let context = args::parse(env::args())?;
@@ -41,7 +40,8 @@ fn main() -> clay::Result<()> {
 
     // Initialize the scene
     let mut scene = TargetListScene::new(GradBg::new(
-        Vector3::new(0.1, 0.1, 0.2), Vector3::new(0.0, 0.0, 0.0),
+        Vector3::new(0.1, 0.1, 0.2),
+        Vector3::new(0.0, 0.0, 0.0),
         Vector3::new(0.0, 0.0, 1.0),
     ));
     scene.set_max_depth(4);
@@ -51,24 +51,24 @@ fn main() -> clay::Result<()> {
     let size = 1.0;
     let fill = 0.5;
     for i in 0..4 {
-        let (x, y) = (2.0*((i % 2) as f64) - 1.0, 2.0*((i / 2) as f64) - 1.0);
+        let (x, y) = (2.0 * ((i % 2) as f64) - 1.0, 2.0 * ((i / 2) as f64) - 1.0);
         shapes.push(Parallelepiped::new(
-            Matrix3::from_diagonal(&Vector3::new(fill/3.0, fill/3.0, 1.0))*size,
-            (Vector3::new(x, y, 0.0)*(1.0 - fill/3.0) + Vector3::new(0.0, 0.0, 1.0))*size,
+            Matrix3::from_diagonal(&Vector3::new(fill / 3.0, fill / 3.0, 1.0)) * size,
+            (Vector3::new(x, y, 0.0) * (1.0 - fill / 3.0) + Vector3::new(0.0, 0.0, 1.0)) * size,
         ));
         shapes.push(Parallelepiped::new(
-            Matrix3::from_diagonal(&Vector3::new(fill, 3.0 - 2.0*fill, fill))*size/3.0,
-            (Vector3::new(x, 0.0, y)*(1.0 - fill/3.0) + Vector3::new(0.0, 0.0, 1.0))*size,
+            Matrix3::from_diagonal(&Vector3::new(fill, 3.0 - 2.0 * fill, fill)) * size / 3.0,
+            (Vector3::new(x, 0.0, y) * (1.0 - fill / 3.0) + Vector3::new(0.0, 0.0, 1.0)) * size,
         ));
         shapes.push(Parallelepiped::new(
-            Matrix3::from_diagonal(&Vector3::new(3.0 - 2.0*fill, fill, fill))*size/3.0,
-            (Vector3::new(0.0, x, y)*(1.0 - fill/3.0) + Vector3::new(0.0, 0.0, 1.0))*size,
+            Matrix3::from_diagonal(&Vector3::new(3.0 - 2.0 * fill, fill, fill)) * size / 3.0,
+            (Vector3::new(0.0, x, y) * (1.0 - fill / 3.0) + Vector3::new(0.0, 0.0, 1.0)) * size,
         ));
     }
     for p in shapes {
-        scene.add(MyShape::from(p).cover(
-            MyMaterial::from(Diffuse {}.color_with(Vector3::new(0.3, 0.3, 0.9)))
-        ));
+        scene.add(MyShape::from(p).cover(MyMaterial::from(
+            Diffuse {}.color_with(Vector3::new(0.3, 0.3, 0.9)),
+        )));
     }
 
     // Add ground
@@ -77,17 +77,22 @@ fn main() -> clay::Result<()> {
             Matrix3::from_diagonal(&Vector3::new(10.0, 10.0, 0.5)),
             Vector3::new(0.0, 0.0, -0.5),
         ))
-        .cover(MyMaterial::from(Diffuse {}.color_with(Vector3::new(0.9, 0.9, 0.9))))
+        .cover(MyMaterial::from(
+            Diffuse {}.color_with(Vector3::new(0.9, 0.9, 0.9)),
+        )),
     );
 
     // Add light sources
     scene.add_targeted(
         MyShape::from(Ellipsoid::new(
-            1.0*Matrix3::identity(), 10.0*Vector3::new(4.0, 6.0, 8.0),
+            1.0 * Matrix3::identity(),
+            10.0 * Vector3::new(4.0, 6.0, 8.0),
         ))
-        .cover(MyMaterial::from(Luminous {}.color_with(2e4*Vector3::new(1.0, 1.0, 0.8))))
+        .cover(MyMaterial::from(
+            Luminous {}.color_with(2e4 * Vector3::new(1.0, 1.0, 0.8)),
+        )),
     );
-    
+
     // Create view
     let view = ProjectionView::new(
         Vector3::new(2.0, 0.0, 1.0),
@@ -99,8 +104,9 @@ fn main() -> clay::Result<()> {
     let (mut worker, _) = renderer.create_worker(&context)?;
 
     // Create dummy postprocessor
-    let (mut postproc, _) = create_default_postproc().collect()?
-    .build_default(&context, dims)?;
+    let (mut postproc, _) = create_default_postproc()
+        .collect()?
+        .build_default(&context, dims)?;
 
     // Create viewer window
     let mut window = Window::new(dims)?;
@@ -135,7 +141,7 @@ fn main() -> clay::Result<()> {
 
             // Move to a new location
             motion.step(dt);
-            
+
             // Update view location
             renderer.view.update(motion.pos(), motion.ori());
             renderer.view.fov = motion.fov;

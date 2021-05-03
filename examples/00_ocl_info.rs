@@ -1,5 +1,4 @@
-use ocl::{self, Platform, Device};
-
+use ocl::{self, Device, Platform};
 
 fn print_info() -> ocl::Result<()> {
     println!("Available platforms:\n");

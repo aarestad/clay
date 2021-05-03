@@ -1,6 +1,6 @@
-use std::collections::HashSet;
+use crate::{filter::Filter, Push};
 use ocl::{self, builders::KernelBuilder};
-use crate::{Push, filter::Filter};
+use std::collections::HashSet;
 
 /// Logarithmic filter.
 ///

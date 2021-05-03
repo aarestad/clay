@@ -1,17 +1,16 @@
-use std::time::Duration;
-use ocl::{Platform, Device};
-use nalgebra::{Vector3, Rotation3};
 use clay::{
-    Context,
-    shape::*,
     material::*,
     object::*,
-    scene::{ListScene, GradientBackground as GradBg},
+    process::{create_default_postproc, create_renderer},
+    scene::{GradientBackground as GradBg, ListScene},
+    shape::*,
     view::ProjectionView,
-    process::{create_renderer, create_default_postproc},
+    Context,
 };
-use clay_viewer::{Window};
-
+use clay_viewer::Window;
+use nalgebra::{Rotation3, Vector3};
+use ocl::{Device, Platform};
+use std::time::Duration;
 
 // Here we declare our object - a combination of
 // spherical shape and colored diffuse material
@@ -20,7 +19,6 @@ type MyObject = Covered<Sphere, Colored<Diffuse>>;
 // Scene contains our objects and has gradient background
 type MyScene = ListScene<MyObject, GradBg>;
 type MyView = ProjectionView;
-
 
 fn main() -> clay::Result<()> {
     // Select default OpenCL platform and device
@@ -33,18 +31,19 @@ fn main() -> clay::Result<()> {
 
     // Initialize the scene
     let mut scene = ListScene::new(GradBg::new(
-        Vector3::new(1.0, 1.0, 1.0), Vector3::new(0.0, 0.0, 0.0),
+        Vector3::new(1.0, 1.0, 1.0),
+        Vector3::new(0.0, 0.0, 0.0),
         Vector3::new(0.0, 0.0, 1.0),
     ));
 
     // Add two spheres to the scene
     scene.add(
         Sphere::new(0.75, Vector3::new(-0.75, 0.0, 0.0))
-        .cover(Diffuse {}.color_with(Vector3::new(0.4, 1.0, 0.4)))
+            .cover(Diffuse {}.color_with(Vector3::new(0.4, 1.0, 0.4))),
     );
     scene.add(
         Sphere::new(1.0, Vector3::new(1.0, 0.0, 0.0))
-        .cover(Diffuse {}.color_with(Vector3::new(0.4, 0.4, 1.0)))
+            .cover(Diffuse {}.color_with(Vector3::new(0.4, 0.4, 1.0))),
     );
 
     // Create view
@@ -58,8 +57,9 @@ fn main() -> clay::Result<()> {
     let (mut worker, _) = renderer.create_worker(&context)?;
 
     // Create dummy postprocessor
-    let (mut postproc, _) = create_default_postproc().collect()?
-    .build_default(&context, dims)?;
+    let (mut postproc, _) = create_default_postproc()
+        .collect()?
+        .build_default(&context, dims)?;
 
     // Create viewer window
     let mut window = Window::new(dims)?;

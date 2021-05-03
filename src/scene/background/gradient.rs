@@ -1,8 +1,7 @@
+use crate::{prelude::*, scene::Background, Context};
+use nalgebra::Vector3;
+use ocl::{self, builders::KernelBuilder, prm};
 use std::collections::HashSet;
-use nalgebra::{Vector3};
-use ocl::{self, prm, builders::KernelBuilder};
-use crate::{prelude::*, Context, scene::Background};
-
 
 /// Background with color gradient along the given direction.
 #[derive(Debug, Clone)]
@@ -37,10 +36,9 @@ impl Store for GradientBackground {
 
 impl Push for GradientBackground {
     fn args_def(kb: &mut KernelBuilder) {
-        kb
-        .arg(prm::Float3::zero()) // front color
-        .arg(prm::Float3::zero()) // back color
-        .arg(prm::Float3::zero()); // gradient direction
+        kb.arg(prm::Float3::zero()) // front color
+            .arg(prm::Float3::zero()) // back color
+            .arg(prm::Float3::zero()); // gradient direction
     }
     fn args_set(&mut self, i: usize, k: &mut ocl::Kernel) -> crate::Result<()> {
         let (fc, bc) = (self.front.map(|d| d as f32), self.back.map(|d| d as f32));

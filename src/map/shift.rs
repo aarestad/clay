@@ -1,7 +1,6 @@
+use crate::{map::*, prelude::*};
+use nalgebra::Vector3;
 use std::collections::HashSet;
-use nalgebra::{Vector3};
-use crate::{prelude::*, map::*};
-
 
 /// Shift along a specific vector.
 pub struct Shift(pub Vector3<f64>);

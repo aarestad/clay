@@ -1,22 +1,14 @@
-use std::{
-    rc::Rc,
-    cell::Cell,
-    collections::HashSet,
-};
-use ocl::{
-    self,
-    builders::KernelBuilder,
-};
-use uuid::Uuid;
 use crate::{
-    prelude::*,
-    shape::*,
-    object::*,
-    scene::{Scene, Background},
-    Context,
     buffer::InstanceBuffer,
+    object::*,
+    prelude::*,
+    scene::{Background, Scene},
+    shape::*,
+    Context,
 };
-
+use ocl::{self, builders::KernelBuilder};
+use std::{cell::Cell, collections::HashSet, rc::Rc};
+use uuid::Uuid;
 
 struct TargetData<T: Target> {
     object_index: usize,
@@ -34,10 +26,8 @@ impl<T: Target> Pack for TargetData<T> {
     fn pack_to(&self, buffer_int: &mut [i32], buffer_float: &mut [f32]) {
         buffer_int.pack(&(self.object_index as i32));
         buffer_float.pack(&(self.brightness as f32));
-        self.target.pack_to(
-            &mut buffer_int[1..],
-            &mut buffer_float[1..],
-        );
+        self.target
+            .pack_to(&mut buffer_int[1..], &mut buffer_float[1..]);
     }
 }
 
@@ -54,20 +44,17 @@ impl<O: Object> Pack for ObjectData<O> {
         O::size_float()
     }
     fn pack_to(&self, buffer_int: &mut [i32], buffer_float: &mut [f32]) {
-        buffer_int.pack(&(match self.target_index {
-            Some(ti) => ti as i32,
-            None => -1i32,
-        }));
-        self.object.pack_to(
-            &mut buffer_int[1..],
-            buffer_float,
+        buffer_int.pack(
+            &(match self.target_index {
+                Some(ti) => ti as i32,
+                None => -1i32,
+            }),
         );
+        self.object.pack_to(&mut buffer_int[1..], buffer_float);
     }
 }
 
-
 type Element<O, T> = (O, Option<(T, f64)>);
-
 
 /// Scene with linear complexity and importance sampling for bright objects.
 pub struct TargetListScene<O: Object + Targeted<T>, T: Target, B: Background> {
@@ -81,10 +68,12 @@ pub struct TargetListScene<O: Object + Targeted<T>, T: Target, B: Background> {
 impl<O: Object + Targeted<T>, T: Target, B: Background> TargetListScene<O, T, B> {
     pub fn new(background: B) -> Self {
         Self {
-            elements: Cell::new(Vec::new()), background,
-            uuid: Uuid::new_v4(), max_depth: 4,
+            elements: Cell::new(Vec::new()),
+            background,
+            uuid: Uuid::new_v4(),
+            max_depth: 4,
             target_prob: 0.5,
-        } 
+        }
     }
     pub fn add(&mut self, object: O) {
         self.elements.get_mut().push((object, None));
@@ -133,22 +122,26 @@ impl<O: Object + Targeted<T>, T: Target, B: Background> Scene for TargetListScen
             O::source(cache),
             T::source(cache),
             B::source(cache),
-            ObjectClass::methods().into_iter().map(|method| {
-                format!(
-                    "#define __object_{} {}_{}",
-                    method, O::inst_name(), method,
-                )
-            }).collect::<Vec<_>>().join("\n"),
-            TargetClass::methods().into_iter().map(|method| {
-                format!(
-                    "#define __target_{} {}_{}",
-                    method, T::inst_name(), method,
-                )
-            }).collect::<Vec<_>>().join("\n"),
+            ObjectClass::methods()
+                .into_iter()
+                .map(|method| format!("#define __object_{} {}_{}", method, O::inst_name(), method,))
+                .collect::<Vec<_>>()
+                .join("\n"),
+            TargetClass::methods()
+                .into_iter()
+                .map(|method| format!("#define __target_{} {}_{}", method, T::inst_name(), method,))
+                .collect::<Vec<_>>()
+                .join("\n"),
             format!("#define OBJECT_SIZE_INT {}", ObjectData::<O>::size_int()),
-            format!("#define OBJECT_SIZE_FLOAT {}", ObjectData::<O>::size_float()),
+            format!(
+                "#define OBJECT_SIZE_FLOAT {}",
+                ObjectData::<O>::size_float()
+            ),
             format!("#define TARGET_SIZE_INT {}", TargetData::<T>::size_int()),
-            format!("#define TARGET_SIZE_FLOAT {}", TargetData::<T>::size_float()),
+            format!(
+                "#define TARGET_SIZE_FLOAT {}",
+                TargetData::<T>::size_float()
+            ),
             "#include <clay/scene/target_list_scene.h>".to_string(),
         ]
         .join("\n")
@@ -158,10 +151,12 @@ impl<O: Object + Targeted<T>, T: Target, B: Background> Scene for TargetListScen
 impl<O: Object + Targeted<T>, T: Target, B: Background> Store for TargetListScene<O, T, B> {
     type Data = TargetListSceneData<O, T, B>;
     fn create_data(&self, context: &Context) -> clay_core::Result<Self::Data> {
-        let elems = self.elements.replace(Vec::new())
-        .into_iter().map(|(o, to)| {
-            (Rc::new(o), to.map(|t| (Rc::new(t.0), t.1)))
-        }).collect::<Vec<_>>();
+        let elems = self
+            .elements
+            .replace(Vec::new())
+            .into_iter()
+            .map(|(o, to)| (Rc::new(o), to.map(|t| (Rc::new(t.0), t.1))))
+            .collect::<Vec<_>>();
 
         let mut objects = Vec::new();
         let mut targets = Vec::new();
@@ -177,7 +172,7 @@ impl<O: Object + Targeted<T>, T: Target, B: Background> Store for TargetListScen
                         target: target.clone(),
                         brightness: *brightness,
                     });
-                },
+                }
                 None => {
                     objects.push(ObjectData {
                         target_index: None,
@@ -188,28 +183,44 @@ impl<O: Object + Targeted<T>, T: Target, B: Background> Store for TargetListScen
         }
 
         let res = InstanceBuffer::new(context, objects.iter())
-        .and_then(|ob| InstanceBuffer::new(context, targets.iter()).map(|tb| (ob, tb)));
+            .and_then(|ob| InstanceBuffer::new(context, targets.iter()).map(|tb| (ob, tb)));
         let _ = (objects, targets);
 
-        assert_eq!(self.elements.replace(
-            elems.into_iter().map(|(o, to)| {
-                (
-                    Rc::try_unwrap(o).map_err(|_| "Rc still exists somewhere").unwrap(),
-                    to.map(|t| (
-                        Rc::try_unwrap(t.0).map_err(|_| "Rc still exists somewhere").unwrap(),
-                        t.1,
-                    )),
+        assert_eq!(
+            self.elements
+                .replace(
+                    elems
+                        .into_iter()
+                        .map(|(o, to)| {
+                            (
+                                Rc::try_unwrap(o)
+                                    .map_err(|_| "Rc still exists somewhere")
+                                    .unwrap(),
+                                to.map(|t| {
+                                    (
+                                        Rc::try_unwrap(t.0)
+                                            .map_err(|_| "Rc still exists somewhere")
+                                            .unwrap(),
+                                        t.1,
+                                    )
+                                }),
+                            )
+                        })
+                        .collect::<Vec<_>>()
                 )
-            }).collect::<Vec<_>>()
-        ).len(), 0);
-        
+                .len(),
+            0
+        );
+
         let (object_buffer, target_buffer) = res?;
 
         Ok(Self::Data {
-            object_buffer, target_buffer,
+            object_buffer,
+            target_buffer,
             background: self.background.create_data(context)?,
             uuid: self.uuid,
-            max_depth: self.max_depth, target_prob: self.target_prob,
+            max_depth: self.max_depth,
+            target_prob: self.target_prob,
         })
     }
     fn update_data(&self, context: &Context, data: &mut Self::Data) -> clay_core::Result<()> {
@@ -244,9 +255,9 @@ impl<O: Object + Targeted<T>, T: Target, B: Background> Push for TargetListScene
         self.background.args_set(j, k)
     }
     fn args_count() -> usize {
-        InstanceBuffer::<ObjectData<O>>::args_count() +
-        InstanceBuffer::<TargetData<T>>::args_count() +
-        2 +
-        B::Data::args_count()
+        InstanceBuffer::<ObjectData<O>>::args_count()
+            + InstanceBuffer::<TargetData<T>>::args_count()
+            + 2
+            + B::Data::args_count()
     }
 }

@@ -1,19 +1,19 @@
-use std::{env, time::Duration};
-use nalgebra::{Vector3, Rotation3, Matrix3};
 use clay::{
-    prelude::*,
-    shape::*,
-    material::*,
-    object::*,
-    scene::{ListScene, ConstantBackground as ConstBg},
-    view::ProjectionView,
     filter::*,
-    process::{create_renderer, create_postproc},
-    shape_select, material_select, material_combine,
+    material::*,
+    material_combine, material_select,
+    object::*,
+    prelude::*,
+    process::{create_postproc, create_renderer},
+    scene::{ConstantBackground as ConstBg, ListScene},
+    shape::*,
+    shape_select,
+    view::ProjectionView,
 };
-use clay_viewer::{Window, Motion};
 use clay_utils::{args, FrameCounter};
-
+use clay_viewer::{Motion, Window};
+use nalgebra::{Matrix3, Rotation3, Vector3};
+use std::{env, time::Duration};
 
 shape_select!(MyShape {
     P(TP=Parallelepiped),
@@ -44,7 +44,6 @@ type MyObject = Covered<MyShape, MyMaterial>;
 type MyScene = ListScene<MyObject, ConstBg>;
 type MyView = ProjectionView;
 
-
 fn main() -> clay::Result<()> {
     // Parse args to select OpenCL platform
     let context = args::parse(env::args())?;
@@ -64,46 +63,49 @@ fn main() -> clay::Result<()> {
         .cover(MyMaterial::from(Glossy::new(
             (0.95, Reflective {}),
             (0.05, Diffuse {}.color_with(Vector3::new(1.0, 1.0, 1.0))),
-        )))
+        ))),
     );
     scene.add(
         MyShape::from(Ellipsoid::new(
-            0.4*Matrix3::identity(),
+            0.4 * Matrix3::identity(),
             Vector3::new(0.0, 1.0, 0.4),
         ))
         .cover(MyMaterial::from(Glossy::new(
             (0.2, Reflective {}),
             (0.8, Diffuse {}.color_with(Vector3::new(1.0, 0.01, 0.01))),
-        )))
+        ))),
     );
     scene.add(
         MyShape::from(Ellipsoid::new(
-            0.3*Matrix3::identity(),
+            0.3 * Matrix3::identity(),
             Vector3::new(0.0, -1.0, 0.3),
         ))
         .cover(MyMaterial::from(
-            Diffuse {}.color_with(Vector3::new(0.1, 0.01, 0.9))
-        ))
+            Diffuse {}.color_with(Vector3::new(0.1, 0.01, 0.9)),
+        )),
     );
     scene.add(
         MyShape::from(Ellipsoid::new(
-            0.25*Matrix3::identity(),
+            0.25 * Matrix3::identity(),
             Vector3::new(0.0, 0.0, 0.25),
         ))
         .cover(MyMaterial::from(
-            Luminous {}.color_with(20.0*Vector3::new(1.0, 1.0, 0.2)),
-        ))
+            Luminous {}.color_with(20.0 * Vector3::new(1.0, 1.0, 0.2)),
+        )),
     );
     scene.add(
         MyShape::from(Ellipsoid::new(
-            0.25*Matrix3::identity(),
+            0.25 * Matrix3::identity(),
             Vector3::new(1.0, 0.0, 0.25),
         ))
         .cover(MyMaterial::from(Glowing::new(
             (0.1, Reflective {}),
             (0.6, Diffuse {}.color_with(Vector3::new(1.0, 1.0, 1.0))),
-            (0.3, Luminous {}.color_with(2.0*Vector3::new(0.01, 1.0, 0.01))),
-        )))
+            (
+                0.3,
+                Luminous {}.color_with(2.0 * Vector3::new(0.01, 1.0, 0.01)),
+            ),
+        ))),
     );
 
     scene.add(
@@ -114,7 +116,7 @@ fn main() -> clay::Result<()> {
         .cover(MyMaterial::from(Glossy::new(
             (0.1, Reflective {}),
             (0.9, Diffuse {}.color_with(Vector3::new(1.0, 1.0, 1.0))),
-        )))
+        ))),
     );
 
     // Create view
@@ -128,8 +130,10 @@ fn main() -> clay::Result<()> {
     let (mut worker, _) = renderer.create_worker(&context)?;
 
     // Create dummy postprocessor
-    let (mut postproc, _) = create_postproc().collect()?
-    .build(&context, dims, LogFilter::new(-4.0, 2.0))?;
+    let (mut postproc, _) =
+        create_postproc()
+            .collect()?
+            .build(&context, dims, LogFilter::new(-4.0, 2.0))?;
 
     // Create viewer window
     let mut window = Window::new(dims)?;
@@ -164,7 +168,7 @@ fn main() -> clay::Result<()> {
 
             // Move to a new location
             motion.step(dt);
-            
+
             // Update view location
             renderer.view.update(motion.pos(), motion.ori());
             renderer.view.fov = motion.fov;
