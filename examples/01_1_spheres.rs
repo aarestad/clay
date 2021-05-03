@@ -47,7 +47,7 @@ fn main() -> clay::Result<()> {
     // Create view
     let view = ProjectionView::new(
         Vector3::new(0.25, -3.0, 0.0),
-        Rotation3::face_towards(&-Vector3::new(0.0, 1.0, 0.0), &Vector3::z_axis()),
+        Rotation3::face_towards(&-Vector3::y_axis(), &Vector3::z_axis()),
     );
 
     // Create renderer and worker
